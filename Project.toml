@@ -1,7 +1,18 @@
 name = "PsychophysicsSimulations"
 authors = ["CMGreenspon"]
-[compat]
-julia = "1.9.1"
-DrWatson = "2.12.7"
+
 [deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+ColorSchemes = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 DrWatson = "634d3b9d-ee7a-5ddf-bec9-22491ea816e1"
+LsqFit = "2fda8390-95c7-5789-9bda-21331edee243"
+Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
+Measures = "442fdcdd-2543-5da2-b0f3-8c86c306513e"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"
+
+[compat]
+DrWatson = "2.12.7"
+julia = "1.9.1"
