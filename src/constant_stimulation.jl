@@ -11,14 +11,13 @@ function ConstantStimulation(Stims::Vector, pDetected::Vector, NumReps::Int;
 
     # Initialize outputs
     t_est = fill(NaN, NumPermutations)
-    pd_all = fill(NaN, length(Stims), NumPermutations)
+    jnd_est = fill(NaN, NumPermutations)
 
     for p = 1:NumPermutations
         # Get the proportion of trials where the draw is below the p(detected) at each intensity
-        pd = mean(
-            (rand(length(Stims), NumReps) .< pD_Repeated) .| # First draw greater than pd
-            (rand(length(Stims), NumReps) .< chance), dims=2)
-        pd_all[:, p] = ChanceRescale(pd, chance)
+        pd = mean((rand(length(Stims), NumReps) .< pD_Repeated) .| # First draw greater than pd
+                  (rand(length(Stims), NumReps) .< chance), dims=2)
+        pd = ChanceRescale(pd, chance)
         # Get fair estimates of the detection threshold and jnd
         dt_idx = findmin(abs.(pd .- 0.5))[2]
         jnd_idx = [findmin(abs.(pd .- 0.25))[2], findmin(abs.(pd .- 0.75))[2]]
@@ -39,5 +38,5 @@ function ConstantStimulation(Stims::Vector, pDetected::Vector, NumReps::Int;
         end
     end
 
-    return t_est, pd_all
+    return t_est, jnd_est
 end
