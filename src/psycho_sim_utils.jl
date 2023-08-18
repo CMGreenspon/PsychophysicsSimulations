@@ -1,4 +1,4 @@
-using DrWatson, Distributions, DataFrames
+using DrWatson, Distributions, DataFrames, GLM
 @quickactivate "PsychophysicsSimulations"
 # Series of helper/utility functions for PsychophysicsSimulations
 """
