@@ -24,7 +24,7 @@ end
 function ChanceRescale(x::Vector{Float64}, chance::Float64)
     if chance < 1.0 # Do not evaluate on 1 AFC version
         x = (x .- chance) ./ (1 - chance) # Scale for chance
-        x[x.<0] .= 0 # Remove values below 0
+        x[x .< 0] .= 0 # Remove values below 0
     end
     return x
 end
