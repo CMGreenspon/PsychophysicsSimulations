@@ -1,6 +1,5 @@
 using DrWatson
 @quickactivate "PsychophysicsSimulations"
-include(srcdir("psycho_sim_utils.jl"))
 
 function ConstantStimulation(Stims::Vector, pDetected::Vector, NumReps::Int;
     NumPermutations::Int = 1, FitMethod::Symbol=:sigmoid, NumAFC::Int=2, BoundSig::Bool=true)

@@ -1,6 +1,5 @@
-using DrWatson, Distributions, UnicodePlots, LsqFit, GLM, Printf
-@quickactivate "PsychophysicsSimulations"
-include(srcdir("psycho_sim_utils.jl"));
+using DrWatson, UnicodePlots
+@quickactivate :PsychophysicsSimulations
 
 ## Define the underlying psychometric function
     x = collect(0:2:100)
@@ -62,4 +61,49 @@ include(srcdir("psycho_sim_utils.jl"));
     pd = [mean(discriminated[idx .== x]) for x in sort(unique(idx))]
     scatterplot(Xm, pd)
 
-    # Can we apply quest to this?? Inflection point should be at 50%
+## Can we apply quest to this?? Inflection point should be at 50%
+    min_amp = 0
+    max_amp = 1000
+    num_trials = 50
+    init_ratio = 0.1
+    init_trials = 3
+
+    amp = fill(0, num_trials)
+    disc = falses(num_trials)
+
+    # Predefine first N trials - we'll do this better in the future
+    init_amps = shuffle(repeat([mu - mu * init_ratio,
+                                mu + mu * init_ratio,
+                                mu - mu * init_ratio * 2,
+                                mu + mu * init_ratio * 2], init_trials))
+    init_amps = convert.(Int64, round.(init_amps ./ 2) .* 2)
+    num_init_amps = init_trials * 4
+
+    for t = 1:num_trials
+        # Select the stim amp for the trial
+        if t <= num_init_amps
+            stim_amp = init_amps[t]
+        else
+            # Convert disc to abs deviation
+            et, ek = PsychophysicsSimulations.fit_sigmoid(abs.(amp[1:t-1] .- mu), disc[1:t-1])
+            # Select the next amplitude to balance around standard
+            if mean(amp[1:t]) > mu
+                stim_amp = mu - abs(et)
+            else
+                stim_amp = mu + abs(et)
+            end
+        end
+        stim_amp = convert(Int64, round(stim_amp / 2) * 2)
+        if stim_amp > max_amp
+            stim_amp = max_amp
+        elseif stim_amp < min_amp
+            stim_amp = min_amp
+        end
+        amp[t] = stim_amp
+
+        std_draw = rand(Normal(mu, sigma))
+        comp_draw = rand(Normal(amp[t], sigma))
+        if (comp_draw > std_draw) & (amp[t] > mu) | (comp_draw < std_draw) & (amp[t] < mu)
+            disc[t] = true
+        end
+    end
