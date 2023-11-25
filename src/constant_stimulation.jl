@@ -5,7 +5,7 @@ include(srcdir("psycho_sim_utils.jl"))
 function ConstantStimulation(Stims::Vector, pDetected::Vector, NumReps::Int;
     NumPermutations::Int = 1, FitMethod::Symbol=:sigmoid, NumAFC::Int=2, BoundSig::Bool=true)
     # Compute chance
-    chance = AFCChance(NumAFC)
+    chance = afc_chance(NumAFC)
     # Create once for comparison
     pD_Repeated = repeat(pDetected, inner=(1, NumReps))
 
