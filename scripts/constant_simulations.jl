@@ -1,3 +1,2 @@
-using DrWatson
-@quickactivate "PsychophysicsSimulations"
-include(srcdir("dummy_src_file.jl"))
+using DrWatson, Base.threads
+@quickactivate :PsychophysicsSimulations
