@@ -31,7 +31,7 @@ end
 function fit_sigmoid(stimulus_levels::Vector{X},
                      detections::Union{BitMatrix, Vector{Float64}};
                      bound::Bool = false,
-                     counts::Union{Nothing, Vector{Int}} = nothing,
+                     weights::Union{Nothing, Vector{Real}} = nothing,
                      num_afc::Int = 1) where X <: Real
     
     if detections isa BitMatrix # Convert to vector of floats
@@ -56,14 +56,14 @@ function fit_sigmoid(stimulus_levels::Vector{X},
         y = detections
     end
 
-    if counts !== nothing
+    if weights !== nothing
         if bound # Need to append the weights first
-            counts = [maximum(counts)*5; counts; maximum(counts)*5]
+            weights = [maximum(weights)*5; weights; maximum(weights)*5]
         end
-        if length(counts) !== length(x)
+        if length(weights) !== length(x)
             error("Unequal number of stimulus levels and weight")
         end
-        sig_fit = curve_fit(sigmoid, x, y, counts, [kappa_guess, dt_guess])
+        sig_fit = curve_fit(sigmoid, x, y, weights, [kappa_guess, dt_guess])
     else
         sig_fit = curve_fit(sigmoid, x, y, [kappa_guess, dt_guess])
     end

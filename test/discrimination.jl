@@ -127,25 +127,31 @@ return
             discriminated[i] = 1
         end
     end
-    # scatterplot(abs.(stim_amps .- mu), abs.(discriminated))
 
     Xe = LinRange(0, 30, 6)
     Xm = Xe[1:end-1] .+ (Xe[2] - Xe[1]) / 2
     (_, idx) = histcountindices(deviation, Xe)
     pd = [mean(discriminated[idx .== x]) for x in sort(unique(idx))]
-    scatterplot(Xm, pd)
+    # Rescale
+    pdh = (pd .+ 1) ./ 2
+    # Force symmetry
+    Xms = [.-reverse(collect(Xm)); collect(Xm)]
+    Pds = [.-reverse(collect(pdh)) .+ 1; collect(pdh)]
+    scatterplot(Xms, Pds)
+    _ , _, jnd_guess = PsychophysicsSimulations.fit_sigmoid(Xms, Pds)
+    @printf("Predicted Sigma = %0.2f\n", PsychophysicsSimulations.jnd2sigma(jnd_guess))
 
 ## Can we apply quest to this?? Inflection point should be at 50%
     min_amp = 0
     max_amp = 100
     num_trials = 50
     init_ratio = 0.1
-    init_trials = 3
+    init_trials = 4
     num_perms = 1000
-    dt_guess = fill(NaN, num_trials, 3)
-    jnd_guess = fill(NaN, num_trials, 3)
+    dt_guess = fill(NaN, num_perms, 3)
+    jnd_guess = fill(NaN, num_perms, 3)
     p = 1
-    # @threads for p = 1:num_perms
+   for p = 1:num_perms
         amp = fill(0, num_trials)
         disc = falses(num_trials)
 
@@ -165,20 +171,24 @@ return
                 # Convert disc to abs deviation
                 et, ek = PsychophysicsSimulations.fit_sigmoid(abs.(amp[1:t-1] .- mu), disc[1:t-1])
                 # Select the next amplitude to balance around standard
-                if mean(amp[1:t]) > mu
-                    stim_amp = mu - abs(et)
-                else
-                    stim_amp = mu + abs(et)
-                end
+                stim_amp = mu - abs(et) * randn()
             end
 
             # Validate stim_amp
-            stim_amp = convert(Int64, trunc(round(stim_amp / 2) * 2))
             if stim_amp > max_amp
                 stim_amp = max_amp
             elseif stim_amp < min_amp
                 stim_amp = min_amp
             end
+            
+            if stim_amp < 0.1
+                stim_amp = 0
+            elseif isnan(stim_amp)
+                stim_amp = rand(init_amps)
+            else
+                stim_amp = convert(Int64, trunc(round(stim_amp / 2) * 2))
+            end
+
             amp[t] = stim_amp
 
             # Discriminate
@@ -188,15 +198,19 @@ return
                 disc[t] = true
             end
         end
-        # try
-        bin_means, pd, weight = PsychophysicsSimulations.discretize_responses(amp, disc)
-        _, dt_guess[p, 1], jnd_guess[p, 1] = PsychophysicsSimulations.fit_sigmoid(bin_means, pd)
-        _, dt_guess[p, 2], jnd_guess[p, 2] = PsychophysicsSimulations.fit_sigmoid(bin_means, pd, counts = weight)
+        try
+            bin_means, pd, weight = PsychophysicsSimulations.discretize_responses(amp, disc)
+            _, dt_guess[p, 1], jnd_guess[p, 1] = PsychophysicsSimulations.fit_sigmoid(bin_means, pd)
+            _, dt_guess[p, 2], jnd_guess[p, 2] = PsychophysicsSimulations.fit_sigmoid(bin_means, pd, counts = sqrt.(weight))
         # _, dt_guess[p, 3], jnd_guess[p, 3] = PsychophysicsSimulations.fit_sigmoid(bin_means, pd, counts = sqrt.(weight))
-    #     catch e
-    #         println(e)
-    #         println(bin_means)
-    #         println(pd)
-    #         println(weight)
-    #     end
-    # end
+        catch e
+            println(e)
+            # println(bin_means)
+            # println(pd)
+            # println(weight)
+        end
+    end
+
+## Sliding window discretize_responses
+    be = LinRange(minimum(amp), maximum(amp), convert(Int, round(sqrt(length(amp)))))
+    pd = [mean(amp[findall(be[x] .<= amp .< be[x+1])]) for x in range(1,length(be)- 1)]
